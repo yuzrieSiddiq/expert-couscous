@@ -98,7 +98,7 @@ public class ActionButtonScript : MonoBehaviour {
         if (total_number < 100) {
         
             /** 1a. set maximum number for the sa column (right) **/
-            if (green_value < 9 && sa_value < 10) {
+            if (sa_value < 10) {
                 /**
                  * 2. get the "Sa" GameObject and all the children except "Title"
                  * loop through each children
@@ -119,7 +119,9 @@ public class ActionButtonScript : MonoBehaviour {
                 /** 4. update the current "sa" number **/
                 sa_value++;
                 green_value++;
-
+                if (green_value == 10)
+                	green_value = 0;
+                
                 /** 5. increment/calculate total **/
                 CalculateTotal ();
 
@@ -145,7 +147,7 @@ public class ActionButtonScript : MonoBehaviour {
         if (total_number < 100) {
 
             /** 1a. set maximum number for the sa column (right) **/
-            if (red_value < 9 && sa_value < 10) {
+            if (sa_value < 10) {
                 /**
                  * 2. get the "Sa" GameObject and all the children except "Title"
                  * loop through each children
@@ -166,6 +168,8 @@ public class ActionButtonScript : MonoBehaviour {
                 /** 4. update the current "sa" number **/
                 sa_value++;
                 red_value++;
+                if (red_value == 10)
+                	red_value = 0;
 
                 /** 5. increment/calculate total **/
                 CalculateTotal ();
@@ -203,7 +207,13 @@ public class ActionButtonScript : MonoBehaviour {
 
         /** 3. if the number is a "tens" **/
         if (total_number % 10 == 0 && sa_value != 0) {
-            // 4a. light up the 10 in "sa" and ring the bell
+        	// 4a. show +1 in puluh
+            Text bentuk_biasa_plusone = GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("+1 at isTen").GetComponent<Text>();
+	    	Text bentuk_lazim_plusone = GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("+1 at isTen").GetComponent<Text>();
+	        bentuk_biasa_plusone.gameObject.SetActive(true);
+	        bentuk_lazim_plusone.gameObject.SetActive(true);
+
+            // 4b. light up the 10 in "sa" and ring the bell
             sa_ten.material.CopyPropertiesFromMaterial (blue_light_on);
             audioSource.Play ();
             StartCoroutine ( LightBulb_Off(sa_ten) );
@@ -301,7 +311,7 @@ public class ActionButtonScript : MonoBehaviour {
         /** 5. reset the color of light_bulb "10" in sa **/
         light_bulb.material.CopyPropertiesFromMaterial (white_bulb);
 
-        /** 6. Update numbers in bentuk lazim and bentuk biasa **/
+        /** 6a. Update numbers in bentuk lazim and bentuk biasa **/
         green_value = 0;
         red_value = 0;
 
@@ -320,6 +330,12 @@ public class ActionButtonScript : MonoBehaviour {
         bentuk_biasa_blue.text = puluh_value.ToString ();
         bentuk_biasa_green.text = green_value.ToString ();
         bentuk_biasa_red.text= red_value.ToString ();
+
+        // 6b. hide +1 in puluh
+        Text bentuk_biasa_plusone = GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("+1 at isTen").GetComponent<Text>();
+    	Text bentuk_lazim_plusone = GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("+1 at isTen").GetComponent<Text>();
+        bentuk_biasa_plusone.gameObject.SetActive(false);
+        bentuk_lazim_plusone.gameObject.SetActive(false);
 
         /** 7. only show the blue number if its not 0 (will look weird to the kids) **/
         if (puluh_value > 0) {
