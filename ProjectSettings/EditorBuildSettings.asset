@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scene/forest_scene_wsvga.unity
     guid: dc8679d0884d9c54c82f91e7c2eed682
+  - enabled: 1
+    path: Assets/Scene/forest_scene_wsvga_minus.unity
+    guid: 083d0a946d044734b825c33d4be97b11
   m_configObjects: {}
