@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 public class MinusActionButtonScript : MonoBehaviour {
 
+    // signatures static variables
+    private static string SIGNATURE_PLUS = "PLUS";
+    private static string SIGNATURE_MINUS = "MINUS";
+
     // set from inspector
     public Material green_light_on;
     public Material red_light_on;
@@ -14,13 +18,14 @@ public class MinusActionButtonScript : MonoBehaviour {
     public AudioClip up_button_sound;
     public AudioClip blue_button_sound;
     public AudioClip reset_button_sound;
-
+    
     // set from script
     private int green_value = 0;
     private int red_value = 0;
     private int sa_value = 0;
     private int puluh_value = 0;
     private int total_number = 0;
+    private string signature;
 
     /**
      * EventTrigger: when black/yellow button is pressed
@@ -94,6 +99,7 @@ public class MinusActionButtonScript : MonoBehaviour {
     }
 
     public void OnPressGreenUp () {
+        signature = SIGNATURE_PLUS;
         /** 1. set maximum number condition: 100 **/
         if (total_number < 100) {
         
@@ -143,6 +149,7 @@ public class MinusActionButtonScript : MonoBehaviour {
     }
 
     public void OnPressRedUp () {
+        signature = SIGNATURE_MINUS;
         /** 1. set maximum number condition: 100 **/
         if (total_number < 100) {
 
@@ -240,43 +247,75 @@ public class MinusActionButtonScript : MonoBehaviour {
         Text bentuk_biasa_total= GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("Total").GetComponent<Text>();
         bentuk_biasa_total.text= total_number.ToString ();
 
-        /** 3. reset all red and green button to off and plus 1 blue **/
-        if (CheckIsTens ()) {
+        /** 3. Get the gameobjects of sa and puluh columns and get their counts **/
+        Transform Sa = GameObject.Find("Sa").transform;
+        Transform Puluh = GameObject.Find("Puluh").transform;
+        int sa_numbers = Sa.childCount - 2;
+        int puluh_numbers = Puluh.childCount - 1;
+
+        if (CheckIsTens ())
+        {
             puluh_value = total_number / 10;
             sa_value = 0;
 
-            /** 4. check what is the number and assign to blue number **/
-            Transform Sa = GameObject.Find ("Sa").transform;
-            int sa_numbers = Sa.childCount - 2;
+            /** 3a. reset all red and green button to off and plus 1 blue **/
+            if (signature == SIGNATURE_PLUS)
+            {   
+                /** 5. go through every "sa" light bulb **/
+                for (int i = 0; i < sa_numbers; i++)
+                {
+                    Transform number = Sa.GetChild(i);
 
-            /** 5. go through every "sa" light bulb **/
-            for (int i = 0; i < sa_numbers; i++) {
-                Transform number = Sa.GetChild (i);
+                    /** 6. turn off all red and green lights **/
+                    MeshRenderer red_lightbulb = number.GetChild(2).gameObject.GetComponent<MeshRenderer>();
+                    red_lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
 
-                /** 6. turn off all red and green lights **/
-                MeshRenderer red_lightbulb = number.GetChild (2).gameObject.GetComponent<MeshRenderer> ();
-                red_lightbulb.material.CopyPropertiesFromMaterial (white_bulb);
+                    MeshRenderer green_lightbulb = number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
+                    green_lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
+                }
 
-                MeshRenderer green_lightbulb = number.GetChild (1).gameObject.GetComponent<MeshRenderer> ();
-                green_lightbulb.material.CopyPropertiesFromMaterial (white_bulb);
+                /** 8. go through every "puluh" light bulb **/
+                for (int i = 0; i < puluh_numbers; i++)
+                {
+                    Transform puluh_number = Puluh.GetChild(i);
+
+                    /** 9. exit the loop **/
+                    if (i == puluh_value)
+                        break;
+
+                    /** 10. light up where current blue light supposed to light up **/
+                    MeshRenderer blue_lightbulb = puluh_number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
+                    blue_lightbulb.material.CopyPropertiesFromMaterial(blue_light_on);
+                }
+
+            } else if (signature == SIGNATURE_MINUS) {
+                /** 3b. turn on green lights on sa column and minus one blue from puluh column**/
+                /** 5. go through every "sa" light bulb **/
+                for (int i = 0; i < sa_numbers; i++)
+                {
+                    Transform number = Sa.GetChild(i);
+
+                    /** 6. turn on all green lights **/
+                    MeshRenderer green_lightbulb = number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
+                    green_lightbulb.material.CopyPropertiesFromMaterial(green_light_on);
+                }
+
+                /** 8. go through every "puluh" light bulb **/
+                for (int i = 0; i < puluh_numbers; i++)
+                {
+                    Transform puluh_number = Puluh.GetChild(i);
+
+                    /** 10. light up where current blue light supposed to light up **/
+                    if (i == puluh_value) {
+                        MeshRenderer blue_lightbulb = puluh_number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
+                        blue_lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
+                        break;
+                    }
+                }
             }
 
-            /** 7. turn on blue light **/
-            Transform Puluh = GameObject.Find ("Puluh").transform;
-            int puluh_numbers = Puluh.childCount - 1;
 
-            /** 8. go through every "puluh" light bulb **/
-            for (int i = 0; i < puluh_numbers; i++) {
-                Transform puluh_number = Puluh.GetChild (i);
 
-                /** 9. exit the loop **/
-                if (i == puluh_value)
-                    break;
-
-                /** 10. light up where current blue light supposed to light up **/
-                MeshRenderer blue_lightbulb = puluh_number.GetChild (1).gameObject.GetComponent<MeshRenderer> ();
-                blue_lightbulb.material.CopyPropertiesFromMaterial (blue_light_on);
-            }
         } else {
             GameObject audioSourceObject = GameObject.FindGameObjectWithTag ("audio-bell");
             AudioSource audioSource = audioSourceObject.GetComponent<AudioSource> ();
