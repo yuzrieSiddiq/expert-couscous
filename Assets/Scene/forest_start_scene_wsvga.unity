@@ -189,7 +189,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1591302605}
+      - m_Target: {fileID: 36457088}
         m_MethodName: ChangeScene
         m_Mode: 1
         m_Arguments:
@@ -2833,7 +2833,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1591302605}
+      - m_Target: {fileID: 1407814120}
         m_MethodName: ChangeScene
         m_Mode: 1
         m_Arguments:
