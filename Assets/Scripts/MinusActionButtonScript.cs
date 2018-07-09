@@ -142,7 +142,7 @@ public class MinusActionButtonScript : MonoBehaviour {
      * - every time press a button, update all the numbers in the UI to match latest numbers stored in program
      * */
     public void OnPressRedUp () {
-        signature = SIGNATURE_PLUS;
+        signature = SIGNATURE_MINUS;
 
         if (total_number >= 0)
         {
@@ -153,12 +153,14 @@ public class MinusActionButtonScript : MonoBehaviour {
             sa_value--;
             red_value++;
 
-            LightBulbOff(COLUMN_SA, green_value);
             if (isTens(total_number))
             {
-                LightBulbOff(COLUMN_PULUH, puluh_value - 1);
-                RefillColumns(COLUMN_SA, UNCOUNTED_CHILD);
+                puluh_value--;
+                LightBulbOff(COLUMN_PULUH, puluh_value);
+                RefillColumns(COLUMN_SA, UNCOUNTED_CHILD_INCL_10);
             }
+
+            LightBulbOff(COLUMN_SA, sa_value);
 
             /** 3. increment/calculate total **/
             CalculateTotal();
@@ -167,6 +169,13 @@ public class MinusActionButtonScript : MonoBehaviour {
             /** 4. update ui to match latest variables value */
             UpdateCalculationTexts();
         }
+
+        //Debug.Log("green value: " + green_value);
+        //Debug.Log("red value: " + red_value);
+        //Debug.Log("sa value: " + sa_value);
+        //Debug.Log("puluh value: " + puluh_value);
+        //Debug.Log("total number: " + total_number);
+        //Debug.Log("-------------------------------");
     }
 
     private void UpdateCalculationTexts()
@@ -199,8 +208,8 @@ public class MinusActionButtonScript : MonoBehaviour {
     {
         Transform Columns = GameObject.Find(column).transform;
         int columnLength = Columns.childCount - 1;
-        int new_value = value - red_value;
-        int check_number = getCheckNumber(new_value);
+        int check_number = getCheckNumber(value);
+        Debug.Log(column);
 
         // for puluh column, no need extra check because the numbers only go from 1 - 10
         if (column == COLUMN_PULUH)
@@ -208,7 +217,7 @@ public class MinusActionButtonScript : MonoBehaviour {
         
         // turn on the light bulbs to start minusing again from above
         if (isTens(value) && !isZero(value) && column == COLUMN_SA)
-            RefillColumns(COLUMN_SA, UNCOUNTED_CHILD_INCL_10);
+            RefillColumns(COLUMN_SA, UNCOUNTED_CHILD);
 
         // mechanism to turn off the light
         for (int i = 0; i < columnLength; i++)
@@ -351,10 +360,16 @@ public class MinusActionButtonScript : MonoBehaviour {
     private int getCheckNumber(int value)
     {
         int check_number = value;
+        int tens = puluh_value * 10;
+
+        Debug.Log("check number before " + value);
+        Debug.Log("tens " + tens);
         if (isMoreThanTen(value))
         {
-            check_number = value - (puluh_value * 10);
+            check_number = value - tens;
         }
+        Debug.Log("check number after " + check_number);
+        Debug.Log("-----------------------");
 
         return check_number;
     }
@@ -362,12 +377,11 @@ public class MinusActionButtonScript : MonoBehaviour {
     private void CalculateTotal()
     {
         /** 1. Calculation to get the total **/
-        total_number = sa_value + (puluh_value * 10);
+        total_number = green_value - red_value;
 
         if (isTens(total_number))
         {
             puluh_value = total_number / 10;
-            sa_value = 0;
         }
     }
 }
