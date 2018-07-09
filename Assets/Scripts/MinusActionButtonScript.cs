@@ -10,6 +10,8 @@ public class MinusActionButtonScript : MonoBehaviour {
     private static string SIGNATURE_MINUS = "MINUS";
     private static string COLUMN_SA = "Sa";
     private static string COLUMN_PULUH = "Puluh";
+    private static int UNCOUNTED_CHILD = 1;
+    private static int UNCOUNTED_CHILD_INCL_10 = 2;
 
     // set from inspector
     public Material green_light_on;
@@ -97,7 +99,8 @@ public class MinusActionButtonScript : MonoBehaviour {
     }
 
     /**
-     * Logic on when plus is
+     * Logic on when PLUS is
+     * 
      * 1. Add the number (0 becomes 1) on sa column
      * 2. Light up the number (1) on sa column
      * 3. When reach 10, light up blue button on puluh column
@@ -107,49 +110,63 @@ public class MinusActionButtonScript : MonoBehaviour {
      * - every time press a button, update all the numbers in the UI to match latest numbers stored in program
      * */
     public void OnPressGreenUp () {
-        /** 1. getting the assigned variables and light up the bulb */
         signature = SIGNATURE_PLUS;
-        LightBulbOn(COLUMN_SA, green_value);
 
-        /** 2. update the current "sa" number **/
-        sa_value++;
-        green_value++;
+        if (total_number < 100)
+        {
+            LightBulbOn(COLUMN_SA, green_value);
+            if (isTens(total_number))
+                LightBulbOn(COLUMN_PULUH, puluh_value - 1);
 
-        /** 3. increment/calculate total **/
-        CalculateTotal();
+            /** 1. update the current "sa" number **/
+            sa_value++;
+            green_value++;
 
-        /** 4. update ui to match latest variables value */
-        UpdateCalculationTexts();
+            /** 2. increment/calculate total **/
+            CalculateTotal();
+
+            /** 3. update ui to match latest variables value */
+            UpdateCalculationTexts();
+        }
     }
 
     /**
-     * Logic on when minus is
-     * 1. Add the number (0 becomes 1) on sa column
-     * 2. Light up the number (1) on sa column
-     * 3. When reach 10, light up blue button on puluh column
-     * 4. when reach 11, (turn off all light bulbs); then turn on light bulb 1 on sa column
-     * 5. when reach 100, disable green button
+     * Logic on when MINUS is
+     * 
+     * 1. Minus the number (1 becomes 0) on sa column
+     * 2. Light off the number (1) on sa column
+     * 3. When reach 10, light off blue button on puluh column, light app all sa buttons
+     * 4. when reach 0, disable red button
+     * 5. when first time press red button, green button is then disabled
      * 
      * - every time press a button, update all the numbers in the UI to match latest numbers stored in program
      * */
     public void OnPressRedUp () {
         signature = SIGNATURE_PLUS;
 
-        /** start disabling the green button */
-        DisableAdding();
+        if (total_number >= 0)
+        {
+            /** start disabling the green button */
+            DisableAdding();
 
-        /** 2. update the current "sa" number **/
-        sa_value--;
-        red_value++;
+            /** 2. update the current "sa" number **/
+            sa_value--;
+            red_value++;
 
-        LightBulbOff(COLUMN_SA, green_value);
+            LightBulbOff(COLUMN_SA, green_value);
+            if (isTens(total_number))
+            {
+                LightBulbOff(COLUMN_PULUH, puluh_value - 1);
+                RefillColumns(COLUMN_SA, UNCOUNTED_CHILD);
+            }
 
-        /** 3. increment/calculate total **/
-        CalculateTotal();
-        if (total_number <= 0) DisableMinus();
+            /** 3. increment/calculate total **/
+            CalculateTotal();
+            if (total_number <= 0) DisableMinus();
 
-        /** 4. update ui to match latest variables value */
-        UpdateCalculationTexts();
+            /** 4. update ui to match latest variables value */
+            UpdateCalculationTexts();
+        }
     }
 
     private void UpdateCalculationTexts()
@@ -173,67 +190,6 @@ public class MinusActionButtonScript : MonoBehaviour {
     }
 
     /**
-     * This function keep tracks of whether the question is in "tens" or not
-     * i.e: 10, 20, 30, ...
-     * @return boolean
-     * */
-    private bool isTens(int number) {
-        if (number % 10 == 0)
-            return true;
-
-        return false;
-    }
-
-    private bool isMoreThanTen(int value)
-    {
-        if (value >= 10)
-            return true;
-
-        return false;
-    }
-
-    /**
-     * This function checks if the value is back to zero
-     * NOTE: only check on sa column; NOT total and not puluh
-     * */
-    private bool isZero(int number)
-    {
-        if (number == 0)
-            return true;
-
-        return false;
-    }
-
-    private int getCheckNumber(int value)
-    {
-        int check_number = value;
-        if (isMoreThanTen(value))
-        {
-            check_number = value - (puluh_value * 10);
-        }
-
-        return check_number;
-    }
-
-    private void CalculateTotal () {
-        /** 1. Calculation to get the total **/
-        total_number = sa_value + (puluh_value * 10);
-    
-        if (isTens(total_number))
-        {
-            puluh_value = total_number / 10;
-            sa_value = 0;
-
-            // turn on the light bulb in puluh column
-            // NOTE: puluh_value -1 because behind the scene, counting starts from 0
-            if (signature == SIGNATURE_PLUS)
-                LightBulbOn(COLUMN_PULUH, puluh_value-1);
-            else
-                LightBulbOff(COLUMN_PULUH, puluh_value-1);
-        }
-    }
-
-    /**
      * Turn off a selected bulb
      * 
      * string   column  "Sa"
@@ -246,9 +202,13 @@ public class MinusActionButtonScript : MonoBehaviour {
         int new_value = value - red_value;
         int check_number = getCheckNumber(new_value);
 
+        // for puluh column, no need extra check because the numbers only go from 1 - 10
+        if (column == COLUMN_PULUH)
+            check_number = value;
+        
         // turn on the light bulbs to start minusing again from above
-        if (isTens(value) && !isZero(value) && column.Equals(COLUMN_SA))
-            RefillColumns(COLUMN_SA);
+        if (isTens(value) && !isZero(value) && column == COLUMN_SA)
+            RefillColumns(COLUMN_SA, UNCOUNTED_CHILD_INCL_10);
 
         // mechanism to turn off the light
         for (int i = 0; i < columnLength; i++)
@@ -330,10 +290,10 @@ public class MinusActionButtonScript : MonoBehaviour {
     /**
      * Refill whole columns with light bulbs (selected column "Sa" or "Puluh")
      * */
-    private void RefillColumns(string column)
+    private void RefillColumns(string column, int uncounted_child)
     {
         Transform Columns = GameObject.Find(column).transform;
-        int columnLength = Columns.childCount - 1;
+        int columnLength = Columns.childCount - uncounted_child;
 
         for (int i = 0; i < columnLength; i++)
         {
@@ -351,5 +311,63 @@ public class MinusActionButtonScript : MonoBehaviour {
     private void DisableMinus()
     {
         GameObject.Find("DownButton").GetComponent<Button>().enabled = false;
+    }
+
+    // utility functions goes here
+
+    /**
+     * This function keep tracks of whether the question is in "tens" or not
+     * i.e: 10, 20, 30, ...
+     * @return boolean
+     * */
+    private bool isTens(int number)
+    {
+        if (number % 10 == 0)
+            return true;
+
+        return false;
+    }
+
+    private bool isMoreThanTen(int value)
+    {
+        if (value >= 10)
+            return true;
+
+        return false;
+    }
+
+    /**
+     * This function checks if the value is back to zero
+     * NOTE: only check on sa column; NOT total and not puluh
+     * */
+    private bool isZero(int number)
+    {
+        if (number == 0)
+            return true;
+
+        return false;
+    }
+
+    private int getCheckNumber(int value)
+    {
+        int check_number = value;
+        if (isMoreThanTen(value))
+        {
+            check_number = value - (puluh_value * 10);
+        }
+
+        return check_number;
+    }
+
+    private void CalculateTotal()
+    {
+        /** 1. Calculation to get the total **/
+        total_number = sa_value + (puluh_value * 10);
+
+        if (isTens(total_number))
+        {
+            puluh_value = total_number / 10;
+            sa_value = 0;
+        }
     }
 }
