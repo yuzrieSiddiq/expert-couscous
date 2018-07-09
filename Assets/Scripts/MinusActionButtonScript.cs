@@ -109,15 +109,13 @@ public class MinusActionButtonScript : MonoBehaviour {
      * - every time press a button, update all the numbers in the UI to match latest numbers stored in program
      * */
     public void OnPressGreenUp () {
-        /** getting the assigned variables */
-        //1. get the "Sa" GameObject and all the children except "Title" loop through each children
+        /** 1. getting the assigned variables and light up the bulb */
         signature = SIGNATURE_PLUS;
+        SaLightBulbOn(green_value);
 
         /** 2. update the current "sa" number **/
         sa_value++;
         green_value++;
-
-        SaLightBulbOn(green_value);
 
         /** 3. increment/calculate total **/
         CalculateTotal();
@@ -244,8 +242,7 @@ public class MinusActionButtonScript : MonoBehaviour {
             if (i == check_number)
             {
                 MeshRenderer green_lightbulb = number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
-                green_lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
-                Debug.Log("Passed here");
+                green_lightbulb.material.CopyPropertiesFromMaterial(green_light_on);
             }
         }
     }
