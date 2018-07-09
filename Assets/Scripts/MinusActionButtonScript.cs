@@ -72,23 +72,19 @@ public class MinusActionButtonScript : MonoBehaviour {
         red_value = 0;
 
         // bentuk lazim
-        Text bentuk_lazim_blue = GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("Blue").GetComponent<Text>();
         Text bentuk_lazim_green = GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("Green").GetComponent<Text>();
         Text bentuk_lazim_red = GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("Red").GetComponent<Text>();
         Text bentuk_lazim_total = GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("Total").GetComponent<Text>();
-
-        bentuk_lazim_blue.text = puluh_value.ToString ();
+        
         bentuk_lazim_green.text = green_value.ToString ();
         bentuk_lazim_red.text= red_value.ToString ();
         bentuk_lazim_total.text= total_number.ToString ();
 
         // bentuk biasa
-        Text bentuk_biasa_blue = GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("Blue").GetComponent<Text>();
         Text bentuk_biasa_green = GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("Green").GetComponent<Text>();
         Text bentuk_biasa_red = GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("Red").GetComponent<Text>();
         Text bentuk_biasa_total = GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("Total").GetComponent<Text>();
-
-        bentuk_biasa_blue.text = puluh_value.ToString ();
+        
         bentuk_biasa_green.text = green_value.ToString ();
         bentuk_biasa_red.text= red_value.ToString ();
         bentuk_biasa_total.text= total_number.ToString ();
@@ -113,7 +109,7 @@ public class MinusActionButtonScript : MonoBehaviour {
     public void OnPressGreenUp () {
         /** 1. getting the assigned variables and light up the bulb */
         signature = SIGNATURE_PLUS;
-        SaLightBulbOn(COLUMN_SA, green_value);
+        LightBulbOn(COLUMN_SA, green_value);
 
         /** 2. update the current "sa" number **/
         sa_value++;
@@ -126,14 +122,34 @@ public class MinusActionButtonScript : MonoBehaviour {
         UpdateCalculationTexts();
     }
 
+    /**
+     * Logic on when minus is
+     * 1. Add the number (0 becomes 1) on sa column
+     * 2. Light up the number (1) on sa column
+     * 3. When reach 10, light up blue button on puluh column
+     * 4. when reach 11, (turn off all light bulbs); then turn on light bulb 1 on sa column
+     * 5. when reach 100, disable green button
+     * 
+     * - every time press a button, update all the numbers in the UI to match latest numbers stored in program
+     * */
     public void OnPressRedUp () {
-        // TODO: logic on press minus button
-        signature = SIGNATURE_MINUS;
-        Transform Sa = GameObject.Find("Sa").transform;
-        Transform Puluh = GameObject.Find("Puluh").transform;
-        int sa_numbers = Sa.childCount - 2;
-        int puluh_numbers = Puluh.childCount - 1;
-        int check_number = total_number - (puluh_value * 10);
+        signature = SIGNATURE_PLUS;
+
+        /** start disabling the green button */
+        DisableAdding();
+
+        /** 2. update the current "sa" number **/
+        sa_value--;
+        red_value++;
+
+        LightBulbOff(COLUMN_SA, green_value);
+
+        /** 3. increment/calculate total **/
+        CalculateTotal();
+        if (total_number <= 0) DisableMinus();
+
+        /** 4. update ui to match latest variables value */
+        UpdateCalculationTexts();
     }
 
     private void UpdateCalculationTexts()
@@ -226,9 +242,27 @@ public class MinusActionButtonScript : MonoBehaviour {
      * 
      * param: light_bulb ref "10" in sa
      * */
-    //IEnumerator LightBulb_Off(MeshRenderer light_bulb) {
-    //    // TODO: turn off a selected bulb
-    //}
+    private void LightBulbOff(string column, int value)
+    {
+        Transform Columns = GameObject.Find(column).transform;
+        int columnLength = Columns.childCount - 1;
+        int new_value = value - red_value;
+        int check_number = getCheckNumber(new_value);
+
+        // turn on the light bulbs to start minusing again from above
+        if (isTens(value) && !isZero(value))
+            RefillColumns(COLUMN_SA);
+
+        for (int i = 0; i < columnLength; i++)
+        {
+            Transform number = Columns.GetChild(i);
+            if (i == check_number)
+            {
+                MeshRenderer green_lightbulb = number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
+                green_lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
+            }
+        }
+    }
 
     /**
      * Turn on a sselected bulb
@@ -236,7 +270,7 @@ public class MinusActionButtonScript : MonoBehaviour {
      * string   column  "Sa"
      * int      value   any value 0 - 10
      * */
-    private void SaLightBulbOn(string column, int value)
+    private void LightBulbOn(string column, int value)
     {
         Transform Columns = GameObject.Find(column).transform;
         int columnLength = Columns.childCount - 1;
@@ -294,5 +328,30 @@ public class MinusActionButtonScript : MonoBehaviour {
             }
         }
     }
-    
+
+    /**
+     * Refill whole columns with light bulbs (selected column "Sa" or "Puluh")
+     * */
+    private void RefillColumns(string column)
+    {
+        Transform Columns = GameObject.Find(column).transform;
+        int columnLength = Columns.childCount - 1;
+
+        for (int i = 0; i < columnLength; i++)
+        {
+            Transform number = Columns.GetChild(i);
+            MeshRenderer lightbulb = number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
+            lightbulb.material.CopyPropertiesFromMaterial(green_light_on);
+        }
+    }
+
+    private void DisableAdding()
+    {
+        GameObject.Find("UpButton").GetComponent<Button>().enabled = false;
+    }
+
+    private void DisableMinus()
+    {
+        GameObject.Find("DownButton").GetComponent<Button>().enabled = false;
+    }
 }
