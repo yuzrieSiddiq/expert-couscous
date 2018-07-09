@@ -216,31 +216,28 @@ public class MinusActionButtonScript : MonoBehaviour {
     }
 
     private void CalculateTotal () {
-        /** 1. increment the total number **/
+        /** 1. Calculation to get the total **/
         total_number = sa_value + (puluh_value * 10);
-        
-        /** 3. Get the gameobjects of sa and puluh columns and get their counts **/
-        Transform Sa = GameObject.Find("Sa").transform;
-        Transform Puluh = GameObject.Find("Puluh").transform;
-        int sa_numbers = Sa.childCount - 2;
-        int puluh_numbers = Puluh.childCount - 1;
-
+    
         if (isTens(total_number))
         {
             puluh_value = total_number / 10;
             sa_value = 0;
-            
-            // TODO: Calculation to get the total
-        } else {
-            
+
+            // turn on the light bulb in puluh column
+            // NOTE: puluh_value -1 because behind the scene, counting starts from 0
+            if (signature == SIGNATURE_PLUS)
+                LightBulbOn(COLUMN_PULUH, puluh_value-1);
+            else
+                LightBulbOff(COLUMN_PULUH, puluh_value-1);
         }
     }
 
     /**
-     * After CheckIsTens() returns true
-     * within 1 second, disable buttons and reset numbers in bentuk lazim and biasa
+     * Turn off a selected bulb
      * 
-     * param: light_bulb ref "10" in sa
+     * string   column  "Sa"
+     * int      value   any value 0 - 10
      * */
     private void LightBulbOff(string column, int value)
     {
@@ -250,9 +247,10 @@ public class MinusActionButtonScript : MonoBehaviour {
         int check_number = getCheckNumber(new_value);
 
         // turn on the light bulbs to start minusing again from above
-        if (isTens(value) && !isZero(value))
+        if (isTens(value) && !isZero(value) && column.Equals(COLUMN_SA))
             RefillColumns(COLUMN_SA);
 
+        // mechanism to turn off the light
         for (int i = 0; i < columnLength; i++)
         {
             Transform number = Columns.GetChild(i);
@@ -265,7 +263,7 @@ public class MinusActionButtonScript : MonoBehaviour {
     }
 
     /**
-     * Turn on a sselected bulb
+     * Turn on a selected bulb
      * 
      * string   column  "Sa"
      * int      value   any value 0 - 10
