@@ -169,13 +169,6 @@ public class MinusActionButtonScript : MonoBehaviour {
             /** 4. update ui to match latest variables value */
             UpdateCalculationTexts();
         }
-
-        //Debug.Log("green value: " + green_value);
-        //Debug.Log("red value: " + red_value);
-        //Debug.Log("sa value: " + sa_value);
-        //Debug.Log("puluh value: " + puluh_value);
-        //Debug.Log("total number: " + total_number);
-        //Debug.Log("-------------------------------");
     }
 
     private void UpdateCalculationTexts()
@@ -215,10 +208,6 @@ public class MinusActionButtonScript : MonoBehaviour {
         if (column == COLUMN_PULUH)
             check_number = value;
         
-        // turn on the light bulbs to start minusing again from above
-        if (isTens(value) && !isZero(value) && column == COLUMN_SA)
-            RefillColumns(COLUMN_SA, UNCOUNTED_CHILD);
-
         // mechanism to turn off the light
         for (int i = 0; i < columnLength; i++)
         {
@@ -229,6 +218,10 @@ public class MinusActionButtonScript : MonoBehaviour {
                 green_lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
             }
         }
+
+        // turn on the light bulbs to start minusing again from above
+        if (isTens(value) && !isZero(value) && column == COLUMN_SA)
+            RefillColumns(COLUMN_SA, UNCOUNTED_CHILD);
     }
 
     /**
@@ -357,20 +350,17 @@ public class MinusActionButtonScript : MonoBehaviour {
         return false;
     }
 
+    /**
+     * returns number from 0 - 9
+     * */
     private int getCheckNumber(int value)
     {
         int check_number = value;
         int tens = puluh_value * 10;
-
-        Debug.Log("check number before " + value);
-        Debug.Log("tens " + tens);
+        
         if (isMoreThanTen(value))
-        {
             check_number = value - tens;
-        }
-        Debug.Log("check number after " + check_number);
-        Debug.Log("-----------------------");
-
+        
         return check_number;
     }
 
