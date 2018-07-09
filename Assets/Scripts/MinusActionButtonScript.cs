@@ -98,142 +98,90 @@ public class MinusActionButtonScript : MonoBehaviour {
         }
     }
 
+    /**
+     * Logic on when plus is
+     * 1. Add the number (0 becomes 1) on sa column
+     * 2. Light up the number (1) on sa column
+     * 3. When reach 10, light up blue button on puluh column
+     * 4. when reach 11, (turn off all light bulbs); then turn on light bulb 1 on sa column
+     * 5. when reach 100, disable green button
+     * 
+     * - every time press a button, update all the numbers in the UI to match latest numbers stored in program
+     * */
     public void OnPressGreenUp () {
+        /** getting the assigned variables */
+        //1. get the "Sa" GameObject and all the children except "Title" loop through each children
         signature = SIGNATURE_PLUS;
-        /** 1. set maximum number condition: 100 **/
-        if (total_number < 100) {
-        
-            /** 1a. set maximum number for the sa column (right) **/
-            if (sa_value < 10) {
-                /**
-                 * 2. get the "Sa" GameObject and all the children except "Title"
-                 * loop through each children
-                 * */
-                Transform Sa = GameObject.Find ("Sa").transform;
-                int numbers = Sa.childCount - 2;
 
-                for (int i = 0; i < numbers; i++) {
-                    Transform number = Sa.GetChild (i);
+        /** 2. update the current "sa" number **/
+        sa_value++;
+        green_value++;
 
-                    /** 3. light up the bulb for current number **/
-                    if (i == sa_value) {
-                        MeshRenderer green_lightbulb = number.GetChild (1).gameObject.GetComponent<MeshRenderer> ();
-                        green_lightbulb.material.CopyPropertiesFromMaterial (green_light_on);
-                    }
-                }
+        SaLightBulbOn(green_value);
 
-                /** 4. update the current "sa" number **/
-                sa_value++;
-                green_value++;
-                if (green_value == 10)
-                	green_value = 0;
-                
-                /** 5. increment/calculate total **/
-                CalculateTotal ();
+        /** 3. increment/calculate total **/
+        CalculateTotal();
 
-                /** 6. Update numbers in bentuk lazim **/
-                Text bentuk_lazim_green= GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("Green").GetComponent<Text>();
-                bentuk_lazim_green.text = green_value.ToString ();
-
-                Text bentuk_biasa_green= GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("Green").GetComponent<Text>();
-                bentuk_biasa_green.text = green_value.ToString ();
-            }
-        } else {
-            
-            /** 1b. if total already reach 100, disable both buttons - become white **/
-            GameObject[] action_buttons = GameObject.FindGameObjectsWithTag ("action-up");
-            foreach (GameObject action_button in action_buttons) {
-                action_button.GetComponent<Button> ().enabled = false;
-            }
-        }
+        /** 4. update ui to match latest variables value */
+        UpdateCalculationTexts();
     }
 
     public void OnPressRedUp () {
+        // TODO: logic on press minus button
         signature = SIGNATURE_MINUS;
-        /** 1. set maximum number condition: 100 **/
-        if (total_number < 100) {
+        Transform Sa = GameObject.Find("Sa").transform;
+        Transform Puluh = GameObject.Find("Puluh").transform;
+        int sa_numbers = Sa.childCount - 2;
+        int puluh_numbers = Puluh.childCount - 1;
+        int check_number = total_number - (puluh_value * 10);
+    }
 
-            /** 1a. set maximum number for the sa column (right) **/
-            if (sa_value < 10) {
-                /**
-                 * 2. get the "Sa" GameObject and all the children except "Title"
-                 * loop through each children
-                 * */
-                Transform Sa = GameObject.Find ("Sa").transform;
-                int numbers = Sa.childCount - 2;
+    private void UpdateCalculationTexts()
+    {
+        /** 1. Get bentuk lazim and bentuk biasa, and update the text **/
+        Text bentuk_lazim_green = GameObject.FindGameObjectWithTag("bentuk-lazim").transform.Find("Green").GetComponent<Text>();
+        Text bentuk_lazim_red = GameObject.FindGameObjectWithTag("bentuk-lazim").transform.Find("Red").GetComponent<Text>();
 
-                for (int i = 0; i < numbers; i++) {
-                    Transform number = Sa.GetChild (i);
+        Text bentuk_biasa_green = GameObject.FindGameObjectWithTag("bentuk-biasa").transform.Find("Green").GetComponent<Text>();
+        Text bentuk_biasa_red = GameObject.FindGameObjectWithTag("bentuk-biasa").transform.Find("Red").GetComponent<Text>();
 
-                    /** 3. light up the bulb for current number **/
-                    if (i == sa_value-1) {
-                        MeshRenderer red_lightbulb = number.GetChild (1).gameObject.GetComponent<MeshRenderer> ();
-                        red_lightbulb.material.CopyPropertiesFromMaterial (white_bulb);
-                    }
-                }
+        bentuk_lazim_green.text = green_value.ToString();
+        bentuk_lazim_red.text = red_value.ToString();
 
-                /** 4. update the current "sa" number **/
-                sa_value--;
-                red_value++;
-                green_value--;
-                if (red_value == 0)
-                	red_value = 10;
-
-                /** 5. increment/calculate total **/
-                CalculateTotal ();
-
-                /** 6. Update numbers in bentuk lazim **/
-                Text bentuk_lazim_red= GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("Red").GetComponent<Text>();
-                bentuk_lazim_red.text = red_value.ToString ();
-
-                Text bentuk_biasa_red= GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("Red").GetComponent<Text>();
-                bentuk_biasa_red.text = red_value.ToString ();
-            }
-        } else {
-            
-            /** 1b. if total already reach 100, disable both buttons - become white **/
-            GameObject[] action_buttons = GameObject.FindGameObjectsWithTag ("action-up");
-            foreach (GameObject action_button in action_buttons) {
-                action_button.GetComponent<Button> ().enabled = false;
-            }
-        }
+        bentuk_biasa_green.text = green_value.ToString();
+        bentuk_biasa_red.text = red_value.ToString();
     }
 
     /**
      * This function keep tracks of whether the question is in "tens" or not
      * i.e: 10, 20, 30, ...
+     * @return boolean
      * */
-    private bool CheckIsTens () {
-        /** 1. get the number 10 in "sa" **/
-        Transform Sa = GameObject.Find ("Sa").transform;
-        MeshRenderer sa_ten = Sa.GetChild (9).GetChild(1).gameObject.GetComponent<MeshRenderer>();
-
-        /** 2. set the sound to ready (only set, no play) **/
-        GameObject audioSourceObject = GameObject.FindGameObjectWithTag ("audio-bell");
-        AudioSource audioSource = audioSourceObject.GetComponent<AudioSource> ();
-        audioSource.clip = blue_button_sound;
-
-        /** 3. if the number is a "tens" **/
-        if (total_number % 10 == 0 && sa_value != 0) {
-        	// 4a. show +1 in puluh
-            Text bentuk_biasa_plusone = GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("+1 at isTen").GetComponent<Text>();
-	    	Text bentuk_lazim_plusone = GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("+1 at isTen").GetComponent<Text>();
-	        bentuk_biasa_plusone.gameObject.SetActive(true);
-	        bentuk_lazim_plusone.gameObject.SetActive(true);
-
-            // 4b. light up the 10 in "sa" and ring the bell
-            sa_ten.material.CopyPropertiesFromMaterial (blue_light_on);
-            audioSource.Play ();
-            StartCoroutine ( LightBulb_Off(sa_ten) );
-
+    private bool isTens(int number) {
+        if (number % 10 == 0)
             return true;
 
-        } else {
-            // 4b. light off the 10 in "sa"
-            sa_ten.material.CopyPropertiesFromMaterial (white_bulb);
+        return false;
+    }
 
-            return false;
-        }
+    private bool isMoreThanTen(int value)
+    {
+        if (value > 10)
+            return true;
+
+        return false;
+    }
+
+    /**
+     * This function checks if the value is back to zero
+     * NOTE: only check on sa column; NOT total and not puluh
+     * */
+    private bool isZero(int number)
+    {
+        if (number == 0)
+            return true;
+
+        return false;
     }
 
     private void CalculateTotal () {
@@ -242,9 +190,8 @@ public class MinusActionButtonScript : MonoBehaviour {
 
         /** 2. Update numbers in bentuk lazim **/
         Text bentuk_lazim_total= GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("Total").GetComponent<Text>();
+        Text bentuk_biasa_total = GameObject.FindGameObjectWithTag("bentuk-biasa").transform.Find("Total").GetComponent<Text>();
         bentuk_lazim_total.text= total_number.ToString ();
-
-        Text bentuk_biasa_total= GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("Total").GetComponent<Text>();
         bentuk_biasa_total.text= total_number.ToString ();
 
         /** 3. Get the gameobjects of sa and puluh columns and get their counts **/
@@ -253,73 +200,14 @@ public class MinusActionButtonScript : MonoBehaviour {
         int sa_numbers = Sa.childCount - 2;
         int puluh_numbers = Puluh.childCount - 1;
 
-        if (CheckIsTens ())
+        if (isTens(total_number))
         {
             puluh_value = total_number / 10;
             sa_value = 0;
-
-            /** 3a. reset all red and green button to off and plus 1 blue **/
-            if (signature == SIGNATURE_PLUS)
-            {   
-                /** 5. go through every "sa" light bulb **/
-                for (int i = 0; i < sa_numbers; i++)
-                {
-                    Transform number = Sa.GetChild(i);
-
-                    /** 6. turn off all red and green lights **/
-                    MeshRenderer red_lightbulb = number.GetChild(2).gameObject.GetComponent<MeshRenderer>();
-                    red_lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
-
-                    MeshRenderer green_lightbulb = number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
-                    green_lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
-                }
-
-                /** 8. go through every "puluh" light bulb **/
-                for (int i = 0; i < puluh_numbers; i++)
-                {
-                    Transform puluh_number = Puluh.GetChild(i);
-
-                    /** 9. exit the loop **/
-                    if (i == puluh_value)
-                        break;
-
-                    /** 10. light up where current blue light supposed to light up **/
-                    MeshRenderer blue_lightbulb = puluh_number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
-                    blue_lightbulb.material.CopyPropertiesFromMaterial(blue_light_on);
-                }
-
-            } else if (signature == SIGNATURE_MINUS) {
-                /** 3b. turn on green lights on sa column and minus one blue from puluh column**/
-                /** 5. go through every "sa" light bulb **/
-                for (int i = 0; i < sa_numbers; i++)
-                {
-                    Transform number = Sa.GetChild(i);
-
-                    /** 6. turn on all green lights **/
-                    MeshRenderer green_lightbulb = number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
-                    green_lightbulb.material.CopyPropertiesFromMaterial(green_light_on);
-                }
-
-                /** 8. go through every "puluh" light bulb **/
-                for (int i = 0; i < puluh_numbers; i++)
-                {
-                    Transform puluh_number = Puluh.GetChild(i);
-
-                    /** 10. light up where current blue light supposed to light up **/
-                    if (i == puluh_value) {
-                        MeshRenderer blue_lightbulb = puluh_number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
-                        blue_lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
-                        break;
-                    }
-                }
-            }
-
-
-
+            
+            // TODO: Calculation to get the total
         } else {
-            GameObject audioSourceObject = GameObject.FindGameObjectWithTag ("audio-bell");
-            AudioSource audioSource = audioSourceObject.GetComponent<AudioSource> ();
-            audioSource.PlayOneShot(up_button_sound);
+            
         }
     }
 
@@ -329,61 +217,36 @@ public class MinusActionButtonScript : MonoBehaviour {
      * 
      * param: light_bulb ref "10" in sa
      * */
-    IEnumerator LightBulb_Off(MeshRenderer light_bulb) {
-        /** 1. get the buttons and put them as disabled **/
-        GameObject[] action_buttons = GameObject.FindGameObjectsWithTag ("action-up");
-        foreach (GameObject action_button in action_buttons) {
-            action_button.GetComponent<Button> ().enabled = false;
+    //IEnumerator LightBulb_Off(MeshRenderer light_bulb) {
+    //    // TODO: turn off a selected bulb
+    //}
+
+    /**
+     * Turn on a sselected bulb
+     * */
+    private void SaLightBulbOn(int value)
+    {
+        Transform Sa = GameObject.Find("Sa").transform;
+        Transform Puluh = GameObject.Find("Puluh").transform;
+        int sa_numbers = Sa.childCount - 1;
+        //int puluh_numbers = Puluh.childCount - 1;
+
+        int check_number = value;
+        if (isMoreThanTen(value)) {
+            check_number = value - (puluh_value * 10);
+            Debug.Log("returned to : " + check_number);
         }
 
-        /** 2. wait 1 second before proceeding with the next part **/
-        yield return new WaitForSeconds ( 1 );
-
-        /** 3. after waiting 1 second, if number still not one hundred, re-enable buttons **/
-        if (total_number < 100) {
-            /** 4. get the buttons and put them as enabled **/
-            action_buttons = GameObject.FindGameObjectsWithTag ("action-up");
-            foreach (GameObject action_button in action_buttons) {
-                action_button.GetComponent<Button> ().enabled = true;
+        // go through each sa column
+        for (int i = 0; i < sa_numbers; i++)
+        {
+            Transform number = Sa.GetChild(i);
+            if (i == check_number)
+            {
+                MeshRenderer green_lightbulb = number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
+                green_lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
+                Debug.Log("Passed here");
             }
-        }
-
-        /** 5. reset the color of light_bulb "10" in sa **/
-        light_bulb.material.CopyPropertiesFromMaterial (white_bulb);
-
-        /** 6a. Update numbers in bentuk lazim and bentuk biasa **/
-        green_value = 0;
-        red_value = 0;
-
-        Text bentuk_lazim_blue = GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("Blue").GetComponent<Text>();
-        Text bentuk_lazim_green = GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("Green").GetComponent<Text>();
-        Text bentuk_lazim_red = GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("Red").GetComponent<Text>();
-
-        bentuk_lazim_blue.text = puluh_value.ToString ();
-        bentuk_lazim_green.text = green_value.ToString ();
-        bentuk_lazim_red.text= red_value.ToString ();
-
-        Text bentuk_biasa_blue = GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("Blue").GetComponent<Text>();
-        Text bentuk_biasa_green = GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("Green").GetComponent<Text>();
-        Text bentuk_biasa_red = GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("Red").GetComponent<Text>();
-
-        bentuk_biasa_blue.text = puluh_value.ToString ();
-        bentuk_biasa_green.text = green_value.ToString ();
-        bentuk_biasa_red.text= red_value.ToString ();
-
-        // 6b. hide +1 in puluh
-        Text bentuk_biasa_plusone = GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find("+1 at isTen").GetComponent<Text>();
-    	Text bentuk_lazim_plusone = GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("+1 at isTen").GetComponent<Text>();
-        bentuk_biasa_plusone.gameObject.SetActive(false);
-        bentuk_lazim_plusone.gameObject.SetActive(false);
-
-        /** 7. only show the blue number if its not 0 (will look weird to the kids) **/
-        if (puluh_value > 0) {
-            GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find ("Blue").gameObject.SetActive (true);
-            GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find ("Blue").gameObject.SetActive (true);
-        } else {
-            GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find ("Blue").gameObject.SetActive (false);
-            GameObject.FindGameObjectWithTag ("bentuk-biasa").transform.Find ("Blue").gameObject.SetActive (false);
         }
     }
 }
