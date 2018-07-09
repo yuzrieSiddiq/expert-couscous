@@ -8,6 +8,8 @@ public class MinusActionButtonScript : MonoBehaviour {
     // signatures static variables
     private static string SIGNATURE_PLUS = "PLUS";
     private static string SIGNATURE_MINUS = "MINUS";
+    private static string COLUMN_SA = "Sa";
+    private static string COLUMN_PULUH = "Puluh";
 
     // set from inspector
     public Material green_light_on;
@@ -111,7 +113,7 @@ public class MinusActionButtonScript : MonoBehaviour {
     public void OnPressGreenUp () {
         /** 1. getting the assigned variables and light up the bulb */
         signature = SIGNATURE_PLUS;
-        SaLightBulbOn(green_value);
+        SaLightBulbOn(COLUMN_SA, green_value);
 
         /** 2. update the current "sa" number **/
         sa_value++;
@@ -139,15 +141,19 @@ public class MinusActionButtonScript : MonoBehaviour {
         /** 1. Get bentuk lazim and bentuk biasa, and update the text **/
         Text bentuk_lazim_green = GameObject.FindGameObjectWithTag("bentuk-lazim").transform.Find("Green").GetComponent<Text>();
         Text bentuk_lazim_red = GameObject.FindGameObjectWithTag("bentuk-lazim").transform.Find("Red").GetComponent<Text>();
-
+        Text bentuk_lazim_total = GameObject.FindGameObjectWithTag("bentuk-lazim").transform.Find("Total").GetComponent<Text>();
+        
         Text bentuk_biasa_green = GameObject.FindGameObjectWithTag("bentuk-biasa").transform.Find("Green").GetComponent<Text>();
         Text bentuk_biasa_red = GameObject.FindGameObjectWithTag("bentuk-biasa").transform.Find("Red").GetComponent<Text>();
+        Text bentuk_biasa_total = GameObject.FindGameObjectWithTag("bentuk-biasa").transform.Find("Total").GetComponent<Text>();
 
         bentuk_lazim_green.text = green_value.ToString();
         bentuk_lazim_red.text = red_value.ToString();
+        bentuk_lazim_total.text = total_number.ToString();
 
         bentuk_biasa_green.text = green_value.ToString();
         bentuk_biasa_red.text = red_value.ToString();
+        bentuk_biasa_total.text = total_number.ToString();
     }
 
     /**
@@ -164,7 +170,7 @@ public class MinusActionButtonScript : MonoBehaviour {
 
     private bool isMoreThanTen(int value)
     {
-        if (value > 10)
+        if (value >= 10)
             return true;
 
         return false;
@@ -182,16 +188,21 @@ public class MinusActionButtonScript : MonoBehaviour {
         return false;
     }
 
+    private int getCheckNumber(int value)
+    {
+        int check_number = value;
+        if (isMoreThanTen(value))
+        {
+            check_number = value - (puluh_value * 10);
+        }
+
+        return check_number;
+    }
+
     private void CalculateTotal () {
         /** 1. increment the total number **/
         total_number = sa_value + (puluh_value * 10);
-
-        /** 2. Update numbers in bentuk lazim **/
-        Text bentuk_lazim_total= GameObject.FindGameObjectWithTag ("bentuk-lazim").transform.Find("Total").GetComponent<Text>();
-        Text bentuk_biasa_total = GameObject.FindGameObjectWithTag("bentuk-biasa").transform.Find("Total").GetComponent<Text>();
-        bentuk_lazim_total.text= total_number.ToString ();
-        bentuk_biasa_total.text= total_number.ToString ();
-
+        
         /** 3. Get the gameobjects of sa and puluh columns and get their counts **/
         Transform Sa = GameObject.Find("Sa").transform;
         Transform Puluh = GameObject.Find("Puluh").transform;
@@ -221,24 +232,25 @@ public class MinusActionButtonScript : MonoBehaviour {
 
     /**
      * Turn on a sselected bulb
+     * 
+     * string   column  "Sa"
+     * int      value   any value 0 - 10
      * */
-    private void SaLightBulbOn(int value)
+    private void SaLightBulbOn(string column, int value)
     {
-        Transform Sa = GameObject.Find("Sa").transform;
-        Transform Puluh = GameObject.Find("Puluh").transform;
-        int sa_numbers = Sa.childCount - 1;
-        //int puluh_numbers = Puluh.childCount - 1;
+        Transform Columns = GameObject.Find(column).transform;
+        int columnLength = Columns.childCount - 1;
+        int check_number = getCheckNumber(value);
 
-        int check_number = value;
-        if (isMoreThanTen(value)) {
-            check_number = value - (puluh_value * 10);
-            Debug.Log("returned to : " + check_number);
+        // clear the column if more than 10
+        if (isMoreThanTen(value) && isTens(value)) {
+            ClearColumns(COLUMN_SA);
         }
 
-        // go through each sa column
-        for (int i = 0; i < sa_numbers; i++)
+        // because the check number always just fall from 0 - 10; it just keep on lighting up these bulbs (will not overflow)
+        for (int i = 0; i < columnLength; i++)
         {
-            Transform number = Sa.GetChild(i);
+            Transform number = Columns.GetChild(i);
             if (i == check_number)
             {
                 MeshRenderer green_lightbulb = number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
@@ -246,4 +258,41 @@ public class MinusActionButtonScript : MonoBehaviour {
             }
         }
     }
+
+    /**
+     * Clear whole column (selected column "Sa" or "Puluh")
+     * */
+    private void ClearColumns(string column)
+    {
+        Transform Columns = GameObject.Find(column).transform;
+        int columnLength = Columns.childCount - 1; // don't include "Title"
+
+        for (int i = 0; i < columnLength; i++)
+        {
+            Transform number = Columns.GetChild(i);
+            MeshRenderer lightbulb = number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
+            lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
+        }
+    }
+
+    /**
+     * Clear a lightbulb in specific column
+     * */
+    private void ClearColumn(string column, int value)
+    {
+        Transform Columns = GameObject.Find(column).transform;
+        int columnLength = Columns.childCount - 1;
+        int check_number = getCheckNumber(value);
+
+        for (int i = 0; i < columnLength; i++)
+        {
+            Transform number = Columns.GetChild(i);
+            if (i == check_number)
+            {
+                MeshRenderer green_lightbulb = number.GetChild(1).gameObject.GetComponent<MeshRenderer>();
+                green_lightbulb.material.CopyPropertiesFromMaterial(white_bulb);
+            }
+        }
+    }
+    
 }
